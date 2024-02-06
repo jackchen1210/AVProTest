@@ -51,6 +51,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 		private readonly static FieldDescription _optionPrerollFrameCount = new FieldDescription(".prerollFrameCount", new GUIContent("Preroll Frame Count", "Number of frames to pre-decode before playback starts.  Higher values increase latency but can improve performance for demanding videos."));
 		private readonly static FieldDescription _optionAudioOutput = new FieldDescription(".audioOutput", new GUIContent("Audio Output"));
 		private readonly static FieldDescription _optionAudio360ChannelMode = new FieldDescription(".audio360ChannelMode", new GUIContent("Channel Mode", "Specifies what channel mode Facebook Audio 360 needs to be initialised with"));
+		private readonly static FieldDescription _optionAudio360LatencyMS = new FieldDescription(".audio360LatencyMS", new GUIContent("Audio Latency (ms)", "Specifies audio latency, in milliseconds, that Facebook Audio 360 needs to be initialised with. -ve will play audio sooner, +ve later."));
 		private readonly static FieldDescription _optionStartMaxBitrate = new FieldDescription(".startWithHighestBitrate", new GUIContent("Start Max Bitrate"));
 		private readonly static FieldDescription _optionUseLowLiveLatency = new FieldDescription(".useLowLiveLatency", new GUIContent("Low Live Latency"));
 		private readonly static FieldDescription _optionHintAlphaChannel = new FieldDescription(".hintAlphaChannel", new GUIContent("Alpha Channel Hint", "If a video is detected as 32-bit, use or ignore the alpha channel"));

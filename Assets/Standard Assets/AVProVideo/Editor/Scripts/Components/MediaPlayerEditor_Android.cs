@@ -32,6 +32,8 @@ namespace RenderHeads.Media.AVProVideo.Editor
 		private readonly static FieldDescription _optionBlitTextureFiltering = new FieldDescription(".blitTextureFiltering", new GUIContent("Blit Texture Filtering", "The texture filtering used for the final internal blit."));
 		private readonly static FieldDescription _optionShowPosterFrames = new FieldDescription(".showPosterFrame", new GUIContent("Show Poster Frame", "Allows a paused loaded video to display the initial frame. This uses up decoder resources."));
 		private readonly static FieldDescription _optionPreferSoftwareDecoder = new FieldDescription(".preferSoftwareDecoder", GUIContent.none);
+		private readonly static FieldDescription _optionForceRtpTCP = new FieldDescription(".forceRtpTCP", GUIContent.none);
+		private readonly static FieldDescription _optionForceEnableMediaCodecAsyncQueueing = new FieldDescription(".forceEnableMediaCodecAsyncQueueing", GUIContent.none);
 		private readonly static FieldDescription _optionPreferredMaximumResolution = new FieldDescription("._preferredMaximumResolution", new GUIContent("Preferred Maximum Resolution", "The desired maximum resolution of the video."));
 #if UNITY_2017_2_OR_NEWER
 		private readonly static FieldDescription _optionCustomPreferredMaxResolution = new FieldDescription("._customPreferredMaximumResolution", new GUIContent(" "));
@@ -123,6 +125,8 @@ namespace RenderHeads.Media.AVProVideo.Editor
 				GUILayout.Label("ExoPlayer API Options", EditorStyles.boldLabel);
 
 				DisplayPlatformOption(optionsVarName, _optionPreferSoftwareDecoder);
+				DisplayPlatformOption(optionsVarName, _optionForceRtpTCP);
+				DisplayPlatformOption(optionsVarName, _optionForceEnableMediaCodecAsyncQueueing);
 
 				// Audio
 				{
@@ -134,6 +138,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 							EditorGUILayout.Space();
 							EditorGUILayout.LabelField("Facebook Audio 360", EditorStyles.boldLabel);
 							DisplayPlatformOptionEnum(optionsVarName, _optionAudio360ChannelMode, _audio360ChannelMapGuiNames);
+							DisplayPlatformOption(optionsVarName, _optionAudio360LatencyMS);
 						}
 					}
 				}

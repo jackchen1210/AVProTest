@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿//-----------------------------------------------------------------------------
+// Copyright 2015-2023 RenderHeads Ltd.  All rights reserved.
+//-----------------------------------------------------------------------------
+
+using System.Collections.Generic;
 using UnityEngine;
 using System;
-
-//-----------------------------------------------------------------------------
-// Copyright 2015-2021 RenderHeads Ltd.  All rights reserved.
-//-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
 {
@@ -43,7 +43,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		public void RequestAudio(AudioOutput outputComponent, MediaPlayer mediaPlayer, float[] audioData, int audioChannelCount, int channelMask, AudioOutput.AudioOutputMode audioOutputMode, bool supportPositionalAudio)
 		{
-			if (mediaPlayer == null || mediaPlayer.Control == null || !mediaPlayer.Control.IsPlaying())
+			if (mediaPlayer == null || mediaPlayer.Control == null)
 			{
 				if (supportPositionalAudio)
 				{
