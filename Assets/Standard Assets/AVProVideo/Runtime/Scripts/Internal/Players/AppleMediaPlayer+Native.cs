@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace RenderHeads.Media.AVProVideo
 {
-	public sealed partial class AppleMediaPlayer
+	public sealed partial class AppleMediaPlayer: BaseMediaPlayer
 	{
 		internal partial struct Native
 		{

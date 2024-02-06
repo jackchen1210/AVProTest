@@ -13,7 +13,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 	/// </summary>
 	public partial class MediaPlayerEditor : UnityEditor.Editor
 	{
-		private readonly static FieldDescription _optionAudioMode = new FieldDescription("._audioMode", new GUIContent("Audio Mode", "Unity mode does not work with HLS video"));
+		private readonly static FieldDescription _optionAudioMode = new FieldDescription(".audioMode", new GUIContent("Audio Mode", "Unity mode does not work with HLS video"));
 		private readonly static FieldDescription _optionTextureFormat = new FieldDescription(".textureFormat", new GUIContent("Texture Format", "BGRA32 is the most compatible.\nYCbCr420 uses ~50% of the memory of BGRA32 and has slightly better performance however it does require shader support, recommended for iOS and tvOS."));
 		private readonly static FieldDescription _optionPreferredForwardBufferDuration = new FieldDescription("._preferredForwardBufferDuration", new GUIContent("Preferred Forward Buffer Duration", "The duration in seconds the player should buffer ahead of the playhead to prevent stalling. Set to 0 to let the system decide."));
 		private readonly static FieldDescription _optionCustomPreferredPeakBitRateApple = new FieldDescription("._preferredPeakBitRate", new GUIContent("Preferred Peak BitRate", "The desired limit of network bandwidth consumption for playback, set to 0 for no preference."));

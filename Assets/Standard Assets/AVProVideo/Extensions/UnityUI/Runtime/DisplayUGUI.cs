@@ -178,7 +178,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		private static Shader EnsureAlphaPackingShader()
 		{
-			_shaderAlphaPacking = EnsureShader(_shaderAlphaPacking, "AVProVideo/Internal/UI/Transparent Packed (stereo)");
+			_shaderAlphaPacking = EnsureShader(_shaderAlphaPacking, "AVProVideo/Internal/UI/Transparent Packed");
 			return _shaderAlphaPacking;
 		}
 
@@ -190,13 +190,13 @@ namespace RenderHeads.Media.AVProVideo
 
 		private Shader EnsureAndroidOESShader()
 		{
-			_shaderAndroidOES = EnsureShader(_shaderAndroidOES, "AVProVideo/Internal/UI/Stereo - AndroidOES");
+			_shaderAndroidOES = EnsureShader(_shaderAndroidOES, "AVProVideo/Internal/UI/AndroidOES");
 			return _shaderAndroidOES;
 		}
 
 		private static Shader EnsureAndroidOESAlphaPackingShader()
 		{
-			_shaderAndroidOESAlphaPacking = EnsureShader(_shaderAndroidOESAlphaPacking, "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES");
+			_shaderAndroidOESAlphaPacking = EnsureShader(_shaderAndroidOESAlphaPacking, "AVProVideo/Internal/UI/Transparent Packed - AndroidOES");
 			return _shaderAndroidOESAlphaPacking;
 		}		
 
@@ -276,7 +276,6 @@ namespace RenderHeads.Media.AVProVideo
 				result = EnsureAlphaPackingShader();
 			}
 
-//			if (_mediaPlayer.TextureProducer != null && _mediaPlayer.IsUsingAndroidOESPath() && (_defaultTexture == null || _lastTexture != _defaultTexture ))
 			if (_mediaPlayer.TextureProducer != null && _mediaPlayer.IsUsingAndroidOESPath())
 			{
 				// This shader handles stereo too

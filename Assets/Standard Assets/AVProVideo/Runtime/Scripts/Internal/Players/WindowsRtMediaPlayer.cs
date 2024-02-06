@@ -850,33 +850,36 @@ namespace RenderHeads.Media.AVProVideo
 			[DllImport("AVProVideoWinRT")]
 			public static extern int GetTimeRanges(System.IntPtr playerInstance, [Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)] TimeRange[] ranges, int rangeCount, TimeRangeTypes timeRangeType);
 
-			// RJT TODO: Clean this up to better match non-WinRT
+			[DllImport("AVProVideoWinRT")]
+			private static extern System.IntPtr GetRenderEventFunc_UpdateAllTextures();
 
 			[DllImport("AVProVideoWinRT")]
-			public static extern System.IntPtr GetRenderEventFunc();
+			private static extern System.IntPtr GetRenderEventFunc_FreeTextures();
 
-			private static System.IntPtr _nativeFunction_UnityRenderEvent;
+			private static System.IntPtr _nativeFunction_UpdateAllTextures;
+			private static System.IntPtr _nativeFunction_FreeTextures;
+
 			public static void IssueRenderThreadEvent_UpdateAllTextures()
 			{
-				if (_nativeFunction_UnityRenderEvent == System.IntPtr.Zero)
+				if (System.IntPtr.Zero == _nativeFunction_UpdateAllTextures)
 				{
-					_nativeFunction_UnityRenderEvent = Native.GetRenderEventFunc();
+					_nativeFunction_UpdateAllTextures = GetRenderEventFunc_UpdateAllTextures();
 				}
-				if (_nativeFunction_UnityRenderEvent != System.IntPtr.Zero)
+				if (System.IntPtr.Zero != _nativeFunction_UpdateAllTextures)
 				{
-					GL.IssuePluginEvent(_nativeFunction_UnityRenderEvent, /*(int)Native.RenderThreadEvent.UpdateAllTextures*/1);
+					UnityEngine.GL.IssuePluginEvent(_nativeFunction_UpdateAllTextures, 0);
 				}
 			}
 
 			public static void IssueRenderThreadEvent_FreeAllTextures()
 			{
-				if (_nativeFunction_UnityRenderEvent == System.IntPtr.Zero)
+				if (System.IntPtr.Zero == _nativeFunction_FreeTextures)
 				{
-					_nativeFunction_UnityRenderEvent = Native.GetRenderEventFunc();
+					_nativeFunction_FreeTextures = GetRenderEventFunc_FreeTextures();
 				}
-				if (_nativeFunction_UnityRenderEvent != System.IntPtr.Zero)
+				if (System.IntPtr.Zero != _nativeFunction_FreeTextures)
 				{
-					GL.IssuePluginEvent(_nativeFunction_UnityRenderEvent, /*(int)Native.RenderThreadEvent.FreeTextures*/2);
+					UnityEngine.GL.IssuePluginEvent(_nativeFunction_FreeTextures, 0);
 				}
 			}
 		}

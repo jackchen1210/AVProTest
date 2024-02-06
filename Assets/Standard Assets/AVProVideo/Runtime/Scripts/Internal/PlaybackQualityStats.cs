@@ -77,14 +77,10 @@ namespace RenderHeads.Media.AVProVideo
 
 			if (vsyncEnabled)
 			{
-#if UNITY_2022_2_OR_NEWER
-				float refreshRate = (float)( Screen.currentResolution.refreshRateRatio.value );
-#else
-				float refreshRate = (float)( Screen.currentResolution.refreshRate );
-#endif
-
-				float vsyncRate = refreshRate / QualitySettings.vSyncCount;
-				float vsyncMs = (1000f / vsyncRate);
+#pragma warning disable CS0618 // 類型或成員已經過時
+                float vsyncRate = (float)Screen.currentResolution.refreshRate / QualitySettings.vSyncCount;
+#pragma warning restore CS0618 // 類型或成員已經過時
+                float vsyncMs = (1000f / vsyncRate);
 
 				if (LogIssues)
 				{
@@ -141,14 +137,10 @@ namespace RenderHeads.Media.AVProVideo
 
 			if (QualitySettings.vSyncCount != 0)
 			{
-#if UNITY_2022_2_OR_NEWER
-				float refreshRate = (float)( Screen.currentResolution.refreshRateRatio.value );
-#else
-				float refreshRate = (float)( Screen.currentResolution.refreshRate );
-#endif
-
-				long vsyncDuration = (long)((QualitySettings.vSyncCount * Helper.SecondsToHNS) / refreshRate);
-				if (timeStamp != _lastTimeStamp)
+#pragma warning disable CS0618 // 類型或成員已經過時
+                long vsyncDuration = (long)((QualitySettings.vSyncCount * Helper.SecondsToHNS) / (float)Screen.currentResolution.refreshRate);
+#pragma warning restore CS0618 // 類型或成員已經過時
+                if (timeStamp != _lastTimeStamp)
 				{
 					float framesPerVSync = (float)frameDuration / (float)vsyncDuration;
 					//Debug.Log((float)frameDuration + " " +  (float)vsyncDuration);

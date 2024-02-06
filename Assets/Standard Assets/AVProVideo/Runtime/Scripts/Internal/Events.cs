@@ -35,15 +35,12 @@ namespace RenderHeads.Media.AVProVideo
 			PlaylistFinished,	// Triggered when the playlist reaches the end
 
 			TextTracksChanged,	// Triggered when the text tracks are added or removed
-			Paused,				// Triggered when the player is paused
-			Unpaused,			// Triggered when the player resumes playing
+			TextCueChanged = SubtitleChange,	// Triggered when the text to display changes
 
 			// TODO: 
 			//StartLoop,		// Triggered when the video starts and is in loop mode
 			//EndLoop,			// Triggered when the video ends and is in loop mode
 			//NewFrame			// Trigger when a new video frame is available
-
-			TextCueChanged = SubtitleChange,	// Triggered when the text to display changes
 		}
 
 		private List<UnityAction<MediaPlayer, MediaPlayerEvent.EventType, ErrorCode>> _listeners = new List<UnityAction<MediaPlayer, EventType, ErrorCode>>(4);

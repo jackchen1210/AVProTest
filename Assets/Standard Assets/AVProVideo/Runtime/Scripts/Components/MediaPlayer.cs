@@ -254,17 +254,17 @@ namespace RenderHeads.Media.AVProVideo
 			}
 		}
 
-#if AVPRO_FEATURE_VIDEORESOLVE
 		[SerializeField] bool _useVideoResolve = false;
 		public bool UseVideoResolve { get { return _useVideoResolve; } set { _useVideoResolve = value; } }
 
 		[SerializeField] VideoResolveOptions _videoResolveOptions = VideoResolveOptions.Create();
 		public VideoResolveOptions VideoResolveOptions { get { return _videoResolveOptions; } set { _videoResolveOptions = value; } }
 
+#if AVPRO_FEATURE_VIDEORESOLVE
 		[SerializeField] VideoResolve _videoResolve = new VideoResolve();
 #endif
-
 		// Sideloaded subtitles
+
 		[FormerlySerializedAs("m_LoadSubtitles")]
 		[SerializeField] bool _sideloadSubtitles;
 		public bool SideloadSubtitles { get { return _sideloadSubtitles; } set { _sideloadSubtitles = value; } }
@@ -781,7 +781,6 @@ namespace RenderHeads.Media.AVProVideo
 			if (_playerInterface != null)
 			{
 				Update();
-				_playerInterface.BeginRender();
 				_playerInterface.Render();
 				return true;
 			}
@@ -839,12 +838,6 @@ namespace RenderHeads.Media.AVProVideo
 		private void LateUpdate()
 		{
 			UpdateResampler();
-
-			// RJT TODO: Better location?
-			if (_playerInterface != null)
-			{
-				_playerInterface.BeginRender();
-			}
 		}
 
 		private void UpdateResampler()

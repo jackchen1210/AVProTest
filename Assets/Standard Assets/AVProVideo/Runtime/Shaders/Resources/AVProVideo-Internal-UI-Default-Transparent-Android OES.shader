@@ -1,4 +1,4 @@
-Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
+Shader "AVProVideo/Internal/UI/Transparent Packed - AndroidOES"
 {
 	Properties
 	{
@@ -17,10 +17,7 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 		_VertScale("Vertical Scale", Range(-1, 1)) = 1.0
 
 		[KeywordEnum(None, Top_Bottom, Left_Right)] AlphaPack("Alpha Pack", Float) = 0
-		[KeywordEnum(None, Top_Bottom, Left_Right)] Stereo("Stereo Mode", Float) = 0
-		[KeywordEnum(None, Left, Right)] ForceEye ("Force Eye Mode", Float) = 0
 		[Toggle(APPLY_GAMMA)] _ApplyGamma("Apply Gamma", Float) = 0
-		[Toggle(STEREO_DEBUG)] _StereoDebug("Stereo Debug Tinting", Float) = 0
 		[Toggle(USE_YPCBCR)] _UseYpCbCr("Use YpCbCr", Float) = 0
 	}
 
@@ -59,13 +56,9 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 
 			// TODO: replace use multi_compile_local instead (Unity 2019.1 feature)
 			#pragma multi_compile ALPHAPACK_NONE ALPHAPACK_TOP_BOTTOM ALPHAPACK_LEFT_RIGHT
-			#pragma multi_compile MONOSCOPIC STEREO_TOP_BOTTOM STEREO_LEFT_RIGHT
-			#pragma multi_compile FORCEEYE_NONE FORCEEYE_LEFT FORCEEYE_RIGHT
 			#pragma multi_compile __ APPLY_GAMMA
-			#pragma multi_compile __ STEREO_DEBUG
 			#pragma multi_compile __ USE_YPCBCR
 			#pragma multi_compile __ USING_DEFAULT_TEXTURE
-			#pragma multi_compile __ USING_URP
 
 			#extension GL_OES_EGL_image_external : require
 			#extension GL_OES_EGL_image_external_essl3 : enable
@@ -77,31 +70,16 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 #ifdef VERTEX
 
 			#include "UnityCG.glslinc"
-		#if defined(STEREO_MULTIVIEW_ON)
-			UNITY_SETUP_STEREO_RENDERING
-		#endif
-			// TODO: once we drop support for Unity 4.x then we can include this
+            // TODO: once we drop support for Unity 4.x then we can include this
 			//#include "UnityUI.cginc"    
 			#define SHADERLAB_GLSL
 			#include "../AVProVideo.cginc"
 			
-			INLINE bool Android_IsStereoEyeLeft()
-			{
-				#if defined(STEREO_MULTIVIEW_ON)
-					int eyeIndex = SetupStereoEyeIndex();
-					return (eyeIndex == 0);
-				#else
-					return IsStereoEyeLeft();
-				#endif
-			}		
 			
 		#if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
 			varying vec4 texVal;
 		#else
 			varying vec2 texVal;
-		#endif
-		#if defined(STEREO_DEBUG)
-			varying vec4 tint;
 		#endif
 
 			uniform vec4 _MainTex_ST;
@@ -117,34 +95,17 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 
 			void main()
 			{
-				#if defined(STEREO_MULTIVIEW_ON)
-					int eyeIndex = SetupStereoEyeIndex();
-					mat4 vpMatrix = GetStereoMatrixVP(eyeIndex);
-					gl_Position = vpMatrix * unity_ObjectToWorld * gl_Vertex;
-				#else
-					gl_Position = XFormObjectToClip(gl_Vertex);
-				#endif
-
+				gl_Position = XFormObjectToClip(gl_Vertex);
 				texVal.xy = transformTex(gl_MultiTexCoord0, _MainTex_ST);
 
 				// Apply texture transformation matrix - adjusts for offset/cropping (when the decoder decodes in blocks that overrun the video frame size, it pads)
 				texVal.xy = (_TextureMatrix * vec4(texVal.x, texVal.y, 0.0, 1.0)).xy;
-
-				#if defined(STEREO_TOP_BOTTOM) || defined(STEREO_LEFT_RIGHT)
-					vec4 scaleOffset = GetStereoScaleOffset( Android_IsStereoEyeLeft(), _MainTex_ST.y < 0.0 );
-					texVal.xy *= scaleOffset.xy;
-					texVal.xy += scaleOffset.zw;
-				#endif
 
 				#if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
 					texVal = OffsetAlphaPackingUV(_MainTex_TexelSize.xy, texVal.xy, _MainTex_ST.y < 0.0);
 					#if defined(ALPHAPACK_TOP_BOTTOM)
 						texVal.yw = texVal.wy;
 					#endif
-				#endif
-
-				#if defined(STEREO_DEBUG)
-					tint = GetStereoDebugTint( Android_IsStereoEyeLeft() );
 				#endif
 			}
 #endif
@@ -162,10 +123,6 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 			uniform samplerExternalOES _MainTex;
 		#endif
 
-#if defined(STEREO_DEBUG)
-			varying vec4 tint;
-#endif
-
 		#if defined(APPLY_GAMMA)
 			vec3 GammaToLinear(vec3 col)
 			{
@@ -176,11 +133,7 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 			void main()
 			{
 				#if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
-					#if __VERSION__ < 300
-						vec4 col = texture2D(_MainTex, texVal.xy);
-					#else
-						vec4 col = texture(_MainTex, texVal.xy);
-					#endif
+					vec4 col = texture2D(_MainTex, texVal.xy);
 				#else
 					vec4 col = vec4(1.0, 1.0, 0.0, 1.0);
 				#endif
@@ -191,21 +144,12 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 
 				#if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
 					#if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
-						#if __VERSION__ < 300
-							vec3 rgb = texture2D(_MainTex, texVal.zw).rgb;
-						#else
-							vec3 rgb = texture(_MainTex, texVal.zw).rgb;
-						#endif
-
+						vec3 rgb = texture2D(_MainTex, texVal.zw).rgb;
 						col.a = (rgb.r + rgb.g + rgb.b) / 3.0;
 					#else
 						col.a = 1.0;
 					#endif
 				#endif
-
-#if defined(STEREO_DEBUG)
-				col *= tint;
-#endif
 
 				gl_FragColor = col;
 			}
@@ -214,5 +158,5 @@ Shader "AVProVideo/Internal/UI/Transparent Packed (stereo) - AndroidOES"
 			ENDGLSL
 		}
 	}
-	Fallback "AVProVideo/Internal/UI/Transparent Packed (stereo)"
+	Fallback "AVProVideo/Internal/UI/Transparent Packed"
 }

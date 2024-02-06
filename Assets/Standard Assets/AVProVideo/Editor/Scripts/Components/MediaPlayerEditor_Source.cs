@@ -248,19 +248,12 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					else
 					{
 						// Display warning to iOS users if they're trying to use HTTP url without setting the permission
-						if ((isPlatformIOS || isPlatformTVOS) && fullPath.StartsWith("http://"))
+						if (isPlatformIOS || isPlatformTVOS)
 						{
-							#if UNITY_2022_1_OR_NEWER
-							if (PlayerSettings.insecureHttpOption != InsecureHttpOption.AlwaysAllowed)
+							if (!PlayerSettings.iOS.allowHTTPDownload && fullPath.StartsWith("http://"))
 							{
-								EditorHelper.IMGUI.NoticeBox(MessageType.Warning, "PlayerSettings.insecureHttpOption must be enabled for HTTP connections (see Player Settings)");
+								EditorHelper.IMGUI.NoticeBox(MessageType.Warning, "Starting with iOS 9 'allow HTTP downloads' must be enabled for HTTP connections (see Player Settings)");
 							}
-							#else
-							if (!PlayerSettings.iOS.allowHTTPDownload)
-							{
-								EditorHelper.IMGUI.NoticeBox(MessageType.Warning, "PlayerSettings.iOS.allowHTTPDownload must be enabled for HTTP connections (see Player Settings)");
-							}
-							#endif
 						}
 #if UNITY_ANDROID
 						if (fullPath.StartsWith("http://"))

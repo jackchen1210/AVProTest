@@ -1,4 +1,4 @@
-// NOTE: We only allow this script to compile in editor so we can easily check for compilation issues
+﻿// NOTE: We only allow this script to compile in editor so we can easily check for compilation issues
 #if (UNITY_EDITOR || UNITY_ANDROID)
 
 #define AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
@@ -78,12 +78,7 @@ namespace RenderHeads.Media.AVProVideo
 		}
 
 #if AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
-	#if UNITY_2022_2_OR_NEWER
-		// Note: See https://docs.unity3d.com/2022.2/Documentation/ScriptReference/QualitySettings-masterTextureLimit.html
 		private int _textureQuality = QualitySettings.globalTextureMipmapLimit;
-	#else
-		private int _textureQuality = QualitySettings.masterTextureLimit;
-	#endif
 #endif
 		static private System.Threading.Thread		m_MainThread;
 
@@ -193,9 +188,9 @@ namespace RenderHeads.Media.AVProVideo
 
 			// Create a java-size video class up front
 			Debug.Log("s_Interface " + s_Interface);
-			m_Video = s_Interface.Call<AndroidJavaObject>( "CreatePlayer", (int)(m_API), options.useFastOesPath, options.preferSoftwareDecoder, (int)(options.audioOutput), (int)(options.audio360ChannelMode), options.audio360LatencyMS, Helper.GetUnityAudioSampleRate(), 
+			m_Video = s_Interface.Call<AndroidJavaObject>( "CreatePlayer", (int)(m_API), options.useFastOesPath, options.preferSoftwareDecoder, (int)(options.audioOutput), (int)(options.audio360ChannelMode), Helper.GetUnityAudioSampleRate(), 
 																		   options.StartWithHighestBandwidth(), options.minBufferMs, options.maxBufferMs, options.bufferForPlaybackMs, options.bufferForPlaybackAfterRebufferMs, 
-																		   (int)(options.GetPreferredPeakBitRateInBitsPerSecond()), (int)(vPreferredVideo.x), (int)(vPreferredVideo.y), (int)(options.blitTextureFiltering), options.forceEnableMediaCodecAsyncQueueing);
+																		   (int)(options.GetPreferredPeakBitRateInBitsPerSecond()), (int)(vPreferredVideo.x), (int)(vPreferredVideo.y), (int)(options.blitTextureFiltering) );
 			Debug.Log("m_Video " + m_Video);
 
 			if (m_Video != null)
@@ -273,7 +268,7 @@ namespace RenderHeads.Media.AVProVideo
 				_mediaHints = mediaHints;
 
 				Debug.Assert(m_Width == 0 && m_Height == 0 && m_Duration == 0.0);
-				bReturn = m_Video.Call<bool>("OpenVideoFromFile", path, offset, httpHeader, forceFileFormat, (int)(m_Options.audioOutput), (int)(m_Options.audio360ChannelMode), m_Options.audio360LatencyMS, m_Options.forceRtpTCP, m_Options.forceEnableMediaCodecAsyncQueueing);
+				bReturn = m_Video.Call<bool>("OpenVideoFromFile", path, offset, httpHeader, forceFileFormat, (int)(m_Options.audioOutput), (int)(m_Options.audio360ChannelMode));
 				if (!bReturn)
 				{
 					DisplayLoadFailureSuggestion(path);
@@ -297,11 +292,9 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override void SetOverrideDecryptionKey(byte[] key)
 		{
-			if( m_Video != null && 
-				key != null )
+			if( m_Video != null )
 			{
-				sbyte[] signedBytesKey = Array.ConvertAll( key, b => unchecked((sbyte)(b)) );
-				m_Video.Call("SetOverrideDecryptionKey", signedBytesKey);
+				m_Video.Call("SetOverrideDecryptionKey", key);
 			}
 		}
 
@@ -918,12 +911,7 @@ namespace RenderHeads.Media.AVProVideo
 			}
 
 #if AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
-	#if UNITY_2022_2_OR_NEWER
-		// Note: See https://docs.unity3d.com/2022.2/Documentation/ScriptReference/QualitySettings-masterTextureLimit.html
 			_textureQuality = QualitySettings.globalTextureMipmapLimit;
-	#else
-			_textureQuality = QualitySettings.masterTextureLimit;
-	#endif
 #endif
 		}
 
@@ -1020,18 +1008,6 @@ namespace RenderHeads.Media.AVProVideo
 				newWidth = m_Video.Call<int>("GetWidth");
 				newHeight = m_Video.Call<int>("GetHeight");
 #endif
-				if (m_UseFastOesPath)
-				{
-					// OES incorrectly reports back the actual video width/height and not the texture width/height so we need to flip them back
-					UnityEngine.Matrix4x4 xfrm = GetTextureMatrix();
-					xfrm[0, 3] = 0.0f;
-					xfrm[1, 3] = 0.0f;
-					Vector4 size = new Vector4(newWidth, newHeight);
-					size = xfrm.inverse * size;
-					newWidth = (int)Mathf.Abs(size.x);
-					newHeight = (int)Mathf.Abs(size.y);
-				}
-
 				if (newWidth != m_Width || newHeight != m_Height)
 				{
 					m_Texture = null;
@@ -1041,7 +1017,7 @@ namespace RenderHeads.Media.AVProVideo
 #if DLL_METHODS
 			int textureHandle = Native._GetTextureHandle(m_iPlayerIndex);
 #else
-			int textureHandle = m_Video.Call<int>("GetTextureHandle");
+				int textureHandle = m_Video.Call<int>("GetTextureHandle");
 #endif
 			if (textureHandle != 0 && textureHandle != m_TextureHandle)
 			{
@@ -1055,17 +1031,6 @@ namespace RenderHeads.Media.AVProVideo
 					newWidth = m_Video.Call<int>("GetWidth");
 					newHeight = m_Video.Call<int>("GetHeight");
 #endif
-					if (m_UseFastOesPath)
-					{
-						// OES incorrectly reports back the actual video width/height and not the texture width/height so we need to flip them back
-						UnityEngine.Matrix4x4 xfrm = GetTextureMatrix();
-						xfrm[0, 3] = 0.0f;
-						xfrm[1, 3] = 0.0f;
-						Vector4 size = new Vector4(newWidth, newHeight);
-						size = xfrm.inverse * size;
-						newWidth = (int)Mathf.Abs(size.x);
-						newHeight = (int)Mathf.Abs(size.y);
-					}
 				}
 
 				if (Mathf.Max(newWidth, newHeight) > SystemInfo.maxTextureSize)
@@ -1117,18 +1082,11 @@ namespace RenderHeads.Media.AVProVideo
 			}
 
 #if AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
-	#if UNITY_2022_2_OR_NEWER
-			// Note: See https://docs.unity3d.com/2022.2/Documentation/ScriptReference/QualitySettings-masterTextureLimit.html
-			int textureQualityToTestAgainst = QualitySettings.globalTextureMipmapLimit;
-	#else
-			int textureQualityToTestAgainst = QualitySettings.masterTextureLimit;
-	#endif
-
 			// In Unity 5.4.2 and above the video texture turns black when changing the TextureQuality in the Quality Settings
 			// The code below gets around this issue.  A bug report has been sent to Unity.  So far we have tested and replicated the
 			// "bug" in Windows only, but a user has reported it in Android too.  
 			// Texture.GetNativeTexturePtr() must sync with the rendering thread, so this is a large performance hit!
-			if (_textureQuality != textureQualityToTestAgainst)
+			if (_textureQuality != QualitySettings.globalTextureMipmapLimit)
 			{
 				if (m_Texture != null && textureHandle > 0 && m_Texture.GetNativeTexturePtr() == System.IntPtr.Zero)
 				{
@@ -1136,7 +1094,7 @@ namespace RenderHeads.Media.AVProVideo
 					m_Texture.UpdateExternalTexture(new System.IntPtr(textureHandle));
 				}
 
-				_textureQuality = textureQualityToTestAgainst;
+				_textureQuality = QualitySettings.globalTextureMipmapLimit;
 			}
 #endif
 		}
@@ -1159,50 +1117,18 @@ namespace RenderHeads.Media.AVProVideo
 			return false;
 		}
 
-		private float[] m_affineTextureXfrm = new float[6] { 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f };
-
 		public override float[] GetTextureTransform()
 		{
 			float[] transform = null;
 			if (m_Video != null)
 			{
 				transform = m_Video.Call<float[]>("GetTextureTransform");
+				/*if (transform != null)
+				{
+					Debug.Log("xform: " + transform[0] + " " + transform[1] + " " + transform[2] + " " + transform[3] + " " + transform[4] + " " + transform[5]);
+				}*/
 			}
 			return transform;
-		}
-
-		// Return the texture transform as an affine transform
-		public override float[] GetAffineTransform()
-		{
-			float[] xfrm = new float[6] { 1, 0, 0, 1, 0, 0 };
-			if (m_Video == null)
-				return xfrm;
-
-			float[] transform = m_Video.Call<float[]>("GetTextureTransform");
-			if (transform != null)
-			{
-				xfrm[0] = transform[0];
-				xfrm[1] = transform[1];
-				xfrm[2] = transform[4];
-				xfrm[3] = transform[5];
-				xfrm[4] = transform[12];
-				xfrm[5] = transform[13];
-			}
-			return xfrm;
-		}
-
-		public override Matrix4x4 GetTextureMatrix()
-		{
-			if (m_Video == null)
-				return Matrix4x4.identity;
-			float[] transform = m_Video.Call<float[]>("GetTextureTransform");
-			if (transform == null)
-				return Matrix4x4.identity;
-			Vector4 v0 = new Vector4(transform[ 0], transform[ 1], transform[ 2], transform[ 3]);
-			Vector4 v1 = new Vector4(transform[ 4], transform[ 5], transform[ 6], transform[ 7]);
-			Vector4 v2 = new Vector4(transform[ 8], transform[ 9], transform[10], transform[11]);
-			Vector4 v3 = new Vector4(transform[12], transform[13], transform[14], transform[15]);
-			return new Matrix4x4(v0, v1, v2, v3);
 		}
 
 		public override void Dispose()
@@ -1433,16 +1359,7 @@ namespace RenderHeads.Media.AVProVideo
 
 								if (bReturn)
 								{
-									VideoTrack videoTrack = new VideoTrack(trackIndex, aReturn[1], aReturn[2], (aReturn[3] == "1"));
-
-									int bitrate = 0;
-									bool gotBitrate = Int32.TryParse(aReturn[4], out bitrate);
-									if( gotBitrate )
-									{
-										videoTrack.Bitrate = bitrate;
-									}
-
-									result = videoTrack;
+									result = new VideoTrack(trackIndex, aReturn[1], aReturn[2], (aReturn[3] == "1"));
 
 									isActiveTrack = (m_Video != null && m_Video.Call<int>("GetCurrentVideoTrackIndex") == trackIndex);
 								}
@@ -1684,22 +1601,6 @@ namespace RenderHeads.Media.AVProVideo
 			if (m_Video != null)
 			{
 				m_Video.Call("CancelDownloadOfMediaToCache", url);
-			}
-		}
-
-		public override void PauseDownloadOfMediaToCache(string url)
-		{
-			if (m_Video != null)
-			{
-				m_Video.Call("PauseDownloadOfMediaToCache", url);
-			}
-		}
-
-		public override void ResumeDownloadOfMediaToCache(string url)
-		{
-			if (m_Video != null)
-			{
-				m_Video.Call("ResumeDownloadOfMediaToCache", url);
 			}
 		}
 

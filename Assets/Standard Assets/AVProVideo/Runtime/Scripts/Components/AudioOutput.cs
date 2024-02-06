@@ -1,8 +1,8 @@
-﻿//-----------------------------------------------------------------------------
-// Copyright 2015-2023 RenderHeads Ltd.  All rights reserved.
-//-----------------------------------------------------------------------------
+﻿using UnityEngine;
 
-using UnityEngine;
+//-----------------------------------------------------------------------------
+// Copyright 2015-2022 RenderHeads Ltd.  All rights reserved.
+//-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
 {
@@ -55,15 +55,7 @@ namespace RenderHeads.Media.AVProVideo
 
 		void Start()
 		{
-			AudioSettings.OnAudioConfigurationChanged += OnAudioConfigurationChanged;
 			ChangeMediaPlayer(_mediaPlayer);
-		}
-
-		void OnAudioConfigurationChanged(bool deviceChanged)
-		{
-			if (_mediaPlayer == null || _mediaPlayer.Control == null)
-				return;
-			_mediaPlayer.Control.AudioConfigurationChanged(deviceChanged);
 		}
 
 		void OnDestroy()
@@ -86,6 +78,19 @@ namespace RenderHeads.Media.AVProVideo
 
 		public void ChangeMediaPlayer(MediaPlayer newPlayer)
 		{
+			#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || (!UNITY_EDITOR && (UNITY_IOS || UNITY_TVOS))
+				MediaPlayer.OptionsApple options = (MediaPlayer.OptionsApple)_mediaPlayer.GetCurrentPlatformOptions();
+				if (options.audioMode == MediaPlayer.OptionsApple.AudioMode.Unity)
+				{
+					this.enabled = true;
+				}
+				else
+				{
+					Debug.LogWarning("[AVProVideo] Unity audio output is not supported when 'Audio Output Mode' is not set to 'Unity' in the MediaPlayer platform options");
+					this.enabled = false;
+				}
+			#endif
+
 			// When changing the media player, handle event subscriptions
 			if (_mediaPlayer != null)
 			{
