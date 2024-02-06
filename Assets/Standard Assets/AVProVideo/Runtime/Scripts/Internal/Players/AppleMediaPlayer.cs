@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace RenderHeads.Media.AVProVideo
 {
-	public sealed partial class AppleMediaPlayer: BaseMediaPlayer
+	public sealed partial class AppleMediaPlayer : BaseMediaPlayer
 	{
 		private static Regex RxSupportedSchema = new Regex("^(https?|file)://", RegexOptions.None);
 		private static DateTime Epoch = new DateTime(2001, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -243,24 +243,39 @@ namespace RenderHeads.Media.AVProVideo
 						case Native.AVPPlayerTextureFormat.R8:
 							textureFormat = TextureFormat.R8;
 							break;
+
+						case Native.AVPPlayerTextureFormat.R16:
+							textureFormat = TextureFormat.R16;
+							break;
+
 						case Native.AVPPlayerTextureFormat.RG8:
 							textureFormat = TextureFormat.RG16;
 							break;
+
+						case Native.AVPPlayerTextureFormat.RG16:
+							textureFormat = TextureFormat.RG32;
+							break;
+
 						case Native.AVPPlayerTextureFormat.BC1:
 							textureFormat = TextureFormat.DXT1;
 							break;
+
 						case Native.AVPPlayerTextureFormat.BC3:
 							textureFormat = TextureFormat.DXT5;
 							break;
+
 						case Native.AVPPlayerTextureFormat.BC4:
 							textureFormat = TextureFormat.BC4;
 							break;
+
 						case Native.AVPPlayerTextureFormat.BC5:
 							textureFormat = TextureFormat.BC5;
 							break;
+
 						case Native.AVPPlayerTextureFormat.BC7:
 							textureFormat = TextureFormat.BC7;
 							break;
+
 						case Native.AVPPlayerTextureFormat.BGRA8:
 						default:
 							break;
@@ -312,16 +327,19 @@ namespace RenderHeads.Media.AVProVideo
 				{
 					_playerSettings.preferredPeakBitRate = _options.GetPreferredPeakBitRateInBitsPerSecond();
 				}
+				
 				if (_options.HasChanged(MediaPlayer.OptionsApple.ChangeFlags.PreferredForwardBufferDuration))
 				{
 					_playerSettings.preferredForwardBufferDuration = _options.preferredForwardBufferDuration;
 				}
+				
 				if (_options.HasChanged(MediaPlayer.OptionsApple.ChangeFlags.PlayWithoutBuffering))
 				{
 					bool enabled = (_options.flags & MediaPlayer.OptionsApple.Flags.PlayWithoutBuffering) == MediaPlayer.OptionsApple.Flags.PlayWithoutBuffering;
-					_playerSettings.networkFlags = enabled ? _playerSettings.networkFlags | Native.AVPPlayerNetworkSettingsFlags.PlayWithoutBuffering
+					_playerSettings.networkFlags = enabled ? _playerSettings.networkFlags |  Native.AVPPlayerNetworkSettingsFlags.PlayWithoutBuffering
 														   : _playerSettings.networkFlags & ~Native.AVPPlayerNetworkSettingsFlags.PlayWithoutBuffering;
 				}
+				
 				if (_options.HasChanged(MediaPlayer.OptionsApple.ChangeFlags.PreferredMaximumResolution))
 				{
 					GetWidthHeightFromResolution(
@@ -330,8 +348,29 @@ namespace RenderHeads.Media.AVProVideo
 						out _playerSettings.preferredMaximumResolution_width,
 						out _playerSettings.preferredMaximumResolution_height);
 				}
+				
+				if (_options.HasChanged(MediaPlayer.OptionsApple.ChangeFlags.AudioMode))
+				{
+					if (_state.status.IsReadyToPlay() == false)
+					{
+						_playerSettings.audioOutputMode = (Native.AVPPlayerAudioOutputMode)_options.audioMode;
+						if (_options.audioMode == MediaPlayer.OptionsApple.AudioMode.Unity)
+						{
+							_playerSettings.sampleRate = AudioSettings.outputSampleRate;
+							int numBuffers;
+							AudioSettings.GetDSPBufferSize(out _playerSettings.bufferLength, out numBuffers);
+						}
+					}
+					else
+					{
+						Debug.LogWarning("[AVProVideo] Unable to change audio mode after media has been loaded and is ready to play");
+						_options.audioMode = _options.previousAudioMode;
+					}
+				}
 
 				Native.AVPPlayerSetPlayerSettings(_player, _playerSettings);
+				
+				_options.ClearChanges();
 			}
 
 			/*BaseMediaPlayer.*/UpdateDisplayFrameRate();
@@ -617,6 +656,16 @@ namespace RenderHeads.Media.AVProVideo
 			return AudioChannelMaskFlags.Unspecified;
 		}
 
+		public override void AudioConfigurationChanged(bool deviceChanged)
+		{
+			if (_playerSettings.audioOutputMode == Native.AVPPlayerAudioOutputMode.SystemDirect)
+				return;
+			_playerSettings.sampleRate = AudioSettings.outputSampleRate;
+			int numBuffers;
+			AudioSettings.GetDSPBufferSize(out _playerSettings.bufferLength, out numBuffers);
+			Native.AVPPlayerSetPlayerSettings(_player, _playerSettings);
+		}
+
 		public override int GrabAudio(float[] buffer, int sampleCount, int channelCount)
 		{
 			return Native.AVPPlayerGetAudio(_player, buffer, buffer.Length);
@@ -766,16 +815,17 @@ namespace RenderHeads.Media.AVProVideo
 			return _state.status.IsStalled();
 		}
 
-		public override float[] GetTextureTransform()
+		public override float[] GetAffineTransform()
 		{
 			if (_state.selectedVideoTrack >= 0)
 			{
-				Native.AVPAffineTransform transform = _videoTrackInfo[_state.selectedVideoTrack].transform;
-				return new float[] { transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty };
+				Native.AVPPlayerVideoTrackInfo videoTrackInfo = _videoTrackInfo[_state.selectedVideoTrack];
+				Native.AVPAffineTransform transform = videoTrackInfo.transform;
+				return new float[] { transform.a, transform.b, transform.c, transform.d, transform.tx / 1080.0f, transform.ty };
 			}
 			else
 			{
-				return new float[] { 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f };
+				return new float[] { 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f };
 			}
 		}
 

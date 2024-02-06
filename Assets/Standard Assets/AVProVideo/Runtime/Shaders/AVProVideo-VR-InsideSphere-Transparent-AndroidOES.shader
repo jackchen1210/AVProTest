@@ -35,6 +35,7 @@
 			#pragma multi_compile __ HIGH_QUALITY
 			#pragma multi_compile __ APPLY_GAMMA
 			#pragma multi_compile __ USING_DEFAULT_TEXTURE
+			#pragma multi_compile __ USING_URP
 
 			#extension GL_OES_EGL_image_external : require
 			#extension GL_OES_EGL_image_external_essl3 : enable
@@ -87,7 +88,13 @@
 
 			void main()
 			{
+#if defined(STEREO_MULTIVIEW_ON)
+				int eyeIndex = SetupStereoEyeIndex();
+				mat4 vpMatrix = GetStereoMatrixVP(eyeIndex);
+				gl_Position = vpMatrix * unity_ObjectToWorld * gl_Vertex;
+#else
 				gl_Position = XFormObjectToClip(gl_Vertex);
+#endif
 
 #if defined(HIGH_QUALITY)
 				texNormal = normalize(gl_Normal.xyz);

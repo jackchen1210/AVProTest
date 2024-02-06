@@ -398,7 +398,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					{
 						if (!_materialIMGUI)
 						{
-							_materialIMGUI = VideoRender.CreateResolveMaterial();
+							_materialIMGUI = VideoRender.CreateResolveMaterial( false );
 							VideoRender.SetupGammaMaterial(_materialIMGUI, true);
 						}
 						{

@@ -91,7 +91,7 @@ namespace RenderHeads.Media.AVProVideo
 				_shaderAlphaPacking = Shader.Find("AVProVideo/Internal/IMGUI/Texture Transparent");
 				if (!_shaderAlphaPacking)
 				{
-					Debug.LogWarning("[AVProVideo] Missing shader 'AVProVideo/IMGUI/Transparent Packed'");
+					Debug.LogWarning("[AVProVideo] Missing shader 'AVProVideo/Internal/IMGUI/Texture Transparent'");
 				}
 			}
 		}

@@ -204,8 +204,8 @@ namespace RenderHeads.Media.AVProVideo.Editor
 
 				if (!_materialResolve)
 				{
-					_materialResolve = VideoRender.CreateResolveMaterial();
-					VideoRender.SetupResolveMaterial(_materialResolve, VideoResolveOptions.Create(), false);
+					_materialResolve = VideoRender.CreateResolveMaterial( false );
+					VideoRender.SetupResolveMaterial(_materialResolve, VideoResolveOptions.Create());
 				}
 				if (!_materialIMGUI)
 				{
@@ -311,7 +311,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					{
 						texture = _previewTexture;
 					}
-					_lastTextureRatio = textureRatio = (float)texture.width / (float)texture.height;
+					_lastTextureRatio = textureRatio = (((float)texture.width / (float)texture.height) * textureSource.GetTexturePixelAspectRatio());
 				}
 
 				// Reserve rectangle for texture
@@ -411,7 +411,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 
 								if (_previewTexture)
 								{
-									EditorGUI.DrawPreviewTexture(textureRect, _previewTexture, _materialIMGUI, ScaleMode.ScaleToFit);
+									EditorGUI.DrawPreviewTexture(textureRect, _previewTexture, _materialIMGUI, ScaleMode.ScaleToFit, textureRatio);
 								}
 								//EditorGUI.DrawTextureTransparent(textureRect, rt, ScaleMode.ScaleToFit);
 

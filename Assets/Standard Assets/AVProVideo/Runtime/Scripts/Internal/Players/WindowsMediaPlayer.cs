@@ -78,9 +78,7 @@ namespace RenderHeads.Media.AVProVideo
 		private static bool 	_isInitialised = false;
 		private static string 	_version = "Plug-in not yet initialised";
 
-		private static System.IntPtr _nativeFunction_UpdateAllTextures;
-		private static System.IntPtr _nativeFunction_FreeTextures;
-		private static System.IntPtr _nativeFunction_ExtractFrame;
+		private static System.IntPtr _nativeFunction_UnityRenderEvent;
 
 #if AVPROVIDEO_FIXREGRESSION_TEXTUREQUALITY_UNITY542
 		private int _textureQuality = QualitySettings.masterTextureLimit;
@@ -108,7 +106,7 @@ namespace RenderHeads.Media.AVProVideo
 						SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Direct3D11 ||
 						SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Direct3D12)
 					{
-						if (!Native.Init(QualitySettings.activeColorSpace == ColorSpace.Linear, true))
+						if (!Native.Init(QualitySettings.activeColorSpace == ColorSpace.Linear/*, true*/))
 						{
 							Debug.LogError("[AVProVideo] Failing to initialise platform");
 						}
@@ -116,12 +114,8 @@ namespace RenderHeads.Media.AVProVideo
 						{
 							_isInitialised = true;
 							_version = GetPluginVersion();
-							_nativeFunction_UpdateAllTextures = Native.GetRenderEventFunc_UpdateAllTextures();
-							_nativeFunction_FreeTextures = Native.GetRenderEventFunc_FreeTextures();
-							_nativeFunction_ExtractFrame = Native.GetRenderEventFunc_WaitForNewFrame();
-							if (_nativeFunction_UpdateAllTextures != IntPtr.Zero &&
-								_nativeFunction_FreeTextures != IntPtr.Zero &&
-								_nativeFunction_ExtractFrame != IntPtr.Zero)
+							_nativeFunction_UnityRenderEvent = Native.GetRenderEventFunc();
+							if (_nativeFunction_UnityRenderEvent != IntPtr.Zero)
 							{
 								_isInitialised = true;
 							}
@@ -230,7 +224,8 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override bool OpenMedia(string path, long offset, string httpHeader, MediaHints mediaHints, int forceFileFormat = 0, bool startWithHighestBitrate = false)
 		{
-			CloseMedia();
+			// RJT NOTE: Commented out as already called by 'InternalOpenMedia()' which calls this function
+//			CloseMedia();
 
 			uint filterCount = 0U;
 			IntPtr[] filters = null;
@@ -951,7 +946,41 @@ namespace RenderHeads.Media.AVProVideo
 				_isTextureTopDown = Native.IsTextureTopDown(_instance);
 				bool isLinear = (!_supportsLinearColorSpace && QualitySettings.activeColorSpace == ColorSpace.Linear);
 
-				_texture = Texture2D.CreateExternalTexture(_width, _height, TextureFormat.BGRA32, UseNativeMips(), isLinear, newPtr);
+				// Texture format
+				// RJT NOTE: It seems Unity 2022/D3D12 now honours texture format here (internally creating
+				// an SRV) so 'BGRA32' is no longer valid for some of our native formats (e.g. HAP, NotchLC)
+				// - Unfortunately, there doesn't appear to be a Unity 'TextureFormat' analog for 'DXGI_FORMAT_R10G10B10A2_UNORM'
+				//   so we're currently working around this by using a format it seems to deem compatible instead
+				//   - Originally used 'ETC_RGB4' on the assumption an invalid format would bypass SRV creation but that
+				//     only worked in editor, so replaced with 'RGB24' which appears to work in builds too
+				//     - https://github.com/RenderHeads/UnityPlugin-AVProVideo/issues/1286
+				// RJT TODO: Once AVPC is fully integrated and texture formats addressed, move to an (ideally shared!) enum rather than DXGI indices! (WIP)
+				// - Also expand to full range of supported formats at that point too
+				TextureFormat textureFormat = TextureFormat.BGRA32;
+				int dxgiTextureFormat = Native.GetTextureFormat(_instance);
+				switch (dxgiTextureFormat)
+				{
+					default:
+//					case -1:	// 'DXGI_FORMAT_B8G8R8A8_UNORM' (Default)
+					case -1:	// 'R8G8B8A8_UNORM' (Default)
+						break;
+//					case 24:	// 'DXGI_FORMAT_R10G10B10A2_UNORM'
+					case 10:	// 'R10G10B10A2_UNORM'
+						textureFormat = TextureFormat.RGB24;//ETC_RGB4;
+						break;
+//					case 71:	// 'DXGI_FORMAT_BC1_UNORM'
+//					case 72:	// 'DXGI_FORMAT_BC1_UNORM_SRGB'
+					case 5:		// 'DXT1'
+						textureFormat = TextureFormat.DXT1;
+						break;
+//					case 77:	// 'DXGI_FORMAT_BC3_UNORM'
+//					case 78:	// 'DXGI_FORMAT_BC3_UNORM_SRGB'
+					case 6:		// 'DXT5'
+						textureFormat = TextureFormat.DXT5;
+						break;
+				}
+
+				_texture = Texture2D.CreateExternalTexture(_width, _height, textureFormat, UseNativeMips(), isLinear, newPtr);
 				if (_texture != null)
 				{
 #if AVPROVIDEO_FIX_UPDATEEXTERNALTEXTURE_LEAK
@@ -1010,6 +1039,11 @@ namespace RenderHeads.Media.AVProVideo
 		{
 		}
 
+		public override void BeginRender()
+		{
+			IssueRenderThreadEvent(Native.RenderThreadEvent.BeginRender);
+		}
+
 		public override void Render()
 		{
 			UpdateDisplayFrameRate();
@@ -1019,7 +1053,8 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override void Dispose()
 		{
-			CloseMedia();
+			// RJT NOTE: Commented out as already called by 'MediaPlayer::OnDestroy()' which calls this function
+//			CloseMedia();
 		}
 
 		public override int GrabAudio(float[] buffer, int sampleCount, int channelCount)
@@ -1043,43 +1078,27 @@ namespace RenderHeads.Media.AVProVideo
 		}
 
 		private static int _lastUpdateAllTexturesFrame = -1;
-		//private static int _lastFreeUnusedTexturesFrame = -1;
-
 		private static void IssueRenderThreadEvent(Native.RenderThreadEvent renderEvent)
 		{
 			// We only want to update all textures once per Unity frame
-			if (renderEvent == Native.RenderThreadEvent.UpdateAllTextures)
+			if ((renderEvent == Native.RenderThreadEvent.BeginRender) || (renderEvent == Native.RenderThreadEvent.UpdateAllTextures))
 			{
-				#if UNITY_EDITOR
+	#if UNITY_EDITOR
 				// In the editor Time.frameCount is not updated when not in play mode, in which case skip this check and always allow rendering
 				if (Application.isPlaying)
-				#endif
+	#endif
 				if (_lastUpdateAllTexturesFrame == Time.frameCount)
+				{
 					return;
+				}
 
-				_lastUpdateAllTexturesFrame = Time.frameCount;
+				if (renderEvent == Native.RenderThreadEvent.UpdateAllTextures)
+				{
+					_lastUpdateAllTexturesFrame = Time.frameCount;
+				}
 			}
-			/*else if (renderEvent == Native.RenderThreadEvent.FreeTextures)
-			{
-				// We only want to free unused textures once per Unity frame
-				if (_lastFreeUnusedTexturesFrame == Time.frameCount)
-					return;
 
-				_lastFreeUnusedTexturesFrame = Time.frameCount;
-			}*/
-
-			if (renderEvent == Native.RenderThreadEvent.UpdateAllTextures)
-			{
-				GL.IssuePluginEvent(_nativeFunction_UpdateAllTextures, 0);
-			}
-			else if (renderEvent == Native.RenderThreadEvent.FreeTextures)
-			{
-				GL.IssuePluginEvent(_nativeFunction_FreeTextures, 0);
-			}
-			else if (renderEvent == Native.RenderThreadEvent.WaitForNewFrame)
-			{
-				GL.IssuePluginEvent(_nativeFunction_ExtractFrame, 0);
-			}
+			GL.IssuePluginEvent(_nativeFunction_UnityRenderEvent, (int)renderEvent);
 		}
 
 		private static string GetPluginVersion()
@@ -1312,6 +1331,7 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			public enum RenderThreadEvent
 			{
+				BeginRender			= 0,
 				UpdateAllTextures,
 				FreeTextures,
 				WaitForNewFrame,
@@ -1323,7 +1343,7 @@ namespace RenderHeads.Media.AVProVideo
 #if AVPROVIDEO_MARSHAL_RETURN_BOOL
 			[return: MarshalAs(UnmanagedType.I1)]
 #endif
-			public static extern bool Init(bool linearColorSpace, bool isD3D11NoSingleThreaded);
+			public static extern bool Init(bool linearColorSpace);
 
 			[DllImport("AVProVideo")]
 			public static extern void Deinit();
@@ -1545,6 +1565,9 @@ namespace RenderHeads.Media.AVProVideo
 			public static extern System.IntPtr GetTexturePointer(System.IntPtr instance);
 
 			[DllImport("AVProVideo")]
+			public static extern int GetTextureFormat(System.IntPtr instance);
+
+			[DllImport("AVProVideo")]
 #if AVPROVIDEO_MARSHAL_RETURN_BOOL
 			[return: MarshalAs(UnmanagedType.I1)]
 #endif
@@ -1566,13 +1589,7 @@ namespace RenderHeads.Media.AVProVideo
 			public static extern float GetTexturePixelAspectRatio(System.IntPtr instance);
 
 			[DllImport("AVProVideo")]
-			public static extern System.IntPtr GetRenderEventFunc_UpdateAllTextures();
-
-			[DllImport("AVProVideo")]
-			public static extern System.IntPtr GetRenderEventFunc_FreeTextures();
-
-			[DllImport("AVProVideo")]
-			public static extern System.IntPtr GetRenderEventFunc_WaitForNewFrame();
+			public static extern System.IntPtr GetRenderEventFunc();
 
 			// Audio Grabbing
 
