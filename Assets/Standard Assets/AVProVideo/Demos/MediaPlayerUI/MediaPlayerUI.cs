@@ -106,7 +106,8 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			{
 				_audioVolume = _mediaPlayer.AudioVolume;
 			}
-			SetupPlayPauseButton();
+
+            SetupPlayPauseButton();
 			SetupTimeBackForwardButtons();
 			SetupVolumeButton();
 			SetupSubtitlesButton();
@@ -119,6 +120,34 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			BuildOptionsMenu();
 		}
 
+        public void PauseMedia()
+        {
+            if (!_mediaPlayer) return;
+
+            Debug.Log("_mediaPlayer.Pause");
+            _mediaPlayer.Control.Pause();
+        }
+
+        public void ResumeMedia()
+        {
+            if (!_mediaPlayer) return;
+
+            Debug.Log("_mediaPlayer.Play");
+			_mediaPlayer.gameObject.SetActive(true);
+            _mediaPlayer.Control.Play();
+
+        }
+
+
+        public void CloseMedia()
+        {
+            if (!_mediaPlayer) return;
+            Debug.Log("_mediaPlayer.Stop");
+
+            _mediaPlayer.Control.Stop();
+            _mediaPlayer.CloseMedia();
+        }
+        
 		private struct UserInteraction
 		{
 			public static float InactiveTime;
