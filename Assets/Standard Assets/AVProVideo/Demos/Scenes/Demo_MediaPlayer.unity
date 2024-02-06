@@ -6969,7 +6969,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2022425658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6991,7 +6991,7 @@ MonoBehaviour:
     transparency: 0
     alphaPacking: 0
     stereoPacking: 0
-  _autoOpen: 1
+  _autoOpen: 0
   _autoPlayOnStart: 1
   _loop: 1
   _audioVolume: 1

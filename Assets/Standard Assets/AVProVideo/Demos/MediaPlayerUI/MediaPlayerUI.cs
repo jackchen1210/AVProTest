@@ -133,7 +133,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
             if (!_mediaPlayer) return;
 
             Debug.Log("_mediaPlayer.Play");
-			_mediaPlayer.gameObject.SetActive(true);
+			_mediaPlayer.OpenMedia();
             _mediaPlayer.Control.Play();
 
         }
