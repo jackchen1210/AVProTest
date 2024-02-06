@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
+    path: Assets/Standard Assets/AVProVideo/Demos/Scenes/Demo_MediaPlayer.unity
+    guid: 839cc75f049d0ea44a78c639e529d44a
   m_configObjects: {}
