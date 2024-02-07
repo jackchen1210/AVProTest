@@ -941,6 +941,7 @@ namespace Platform
         {
             if (focusStatus)
             {
+                if(_mediaPlayer.Control!=null)
                 _mediaPlayer.Control.Play();
             }
         }
@@ -951,7 +952,8 @@ namespace Platform
             {
                 if (_mediaPlayer.PauseMediaOnAppPause)
                 {
-                    _mediaPlayer.Control.Pause();
+                    if (_mediaPlayer.Control != null)
+                        _mediaPlayer.Control.Pause();
                 }
             }
             else
