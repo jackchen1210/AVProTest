@@ -1578,7 +1578,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4229980534664021241}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6696275387579370857}
+        m_TargetAssemblyTypeName: Platform.SubViewPage, Assembly-CSharp
+        m_MethodName: Hide
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &6372080498273867651
 GameObject:
   m_ObjectHideFlags: 0
@@ -2552,6 +2564,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7015665219824789866, guid: 97364d2c69e2bfe498a59e8d148bd366, type: 3}
   m_PrefabInstance: {fileID: 8139789973003743399}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6696275387579370857 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3178315544901238222, guid: 97364d2c69e2bfe498a59e8d148bd366, type: 3}
+  m_PrefabInstance: {fileID: 8139789973003743399}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273095386769430986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f701cc59caf80084cb2c9c185b1394be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &8189653614595223963 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 94902460599861564, guid: 97364d2c69e2bfe498a59e8d148bd366, type: 3}
