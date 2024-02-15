@@ -20,7 +20,7 @@ public class OpenRank : MonoBehaviour
     {
         DialogManager.ShowDialog("Dia_MediaPlayer", new Dia_MediaPlayer.MyParam
         {
-            VedioUrl = "https://grd4.wdapprd1234.net/Record/Video/1028400640320000000400000.mp4",
+            VedioUrl = "https://grd4.wdapprd1234.net/Record/Video/3003400060460000000000000.mp4",
             enterType = Dia_MediaPlayer.EnterType.排行榜回放
         });
     }
